@@ -46,20 +46,38 @@ st.sidebar.info("💡 สลับเปลี่ยนเกมได้ตล�
 # ==========================================
 if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจิทัล 3D (Beer Spin the Bottle)":
     st.title("🍾 เกมหมุนขวดเบียร์ดิจิทัล (Beer Spin)")
-    st.write("วางมือถือไว้กลางวง เลือกจำนวนเพื่อนในวงเหล้า แล้วกดหมุนขวดเบียร์แก้วอำพันเสี่ยงทายได้เลย!")
+    st.write("กรอกชื่อเพื่อนในวง เลือกจำนวนคน แล้วชื่อจะไปโผล่บนวงล้อรอบขวดเบียร์ทันที!")
 
-    spin_bottle_html = """
+    # --- ส่วนเลือกจำนวนคนและช่องกรอกชื่อผู้เล่นอยู่ด้านบน ---
+    col1, col2 = st.columns([1, 2])
+    with col1:
+        num_players = st.selectbox("👥 เลือกจำนวนคนในวง:", [3, 4, 5, 6, 7, 8, 9, 10, 12], index=2)
+
+    st.write("✏️ **กรอกชื่อผู้เล่นแต่ละคน:**")
+    player_names = []
+    
+    cols = st.columns(3)
+    for i in range(num_players):
+        with cols[i % 3]:
+            default_name = f"เพื่อน {i+1}"
+            name = st.text_input(f"คนที่ {i+1}", value=default_name, key=f"player_name_{i}")
+            player_names.append(name.strip() if name and name.strip() != "" else default_name)
+
+    # แปลงรายชื่อส่งเข้า JavaScript เพื่อไปแสดงที่ป้ายรอบขวด
+    names_js_array = str(player_names).replace("'", '"')
+
+    spin_bottle_html = f"""
     <!DOCTYPE html>
     <html lang="th">
     <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-      * {
+      * {{
         box-sizing: border-box;
         user-select: none;
-      }
-      body {
+      }}
+      body {{
         margin: 0;
         padding: 10px;
         background: #0b0f19;
@@ -69,11 +87,11 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        min-height: 560px;
+        min-height: 520px;
         overflow: hidden;
-      }
+      }}
 
-      .control-panel {
+      .control-panel {{
         display: flex;
         flex-wrap: wrap;
         gap: 12px;
@@ -81,25 +99,25 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         align-items: center;
         background: rgba(31, 41, 55, 0.7);
         backdrop-filter: blur(10px);
-        padding: 10px 18px;
+        padding: 8px 16px;
         border-radius: 16px;
         border: 1px solid rgba(255, 255, 255, 0.1);
-        margin-bottom: 15px;
+        margin-bottom: 12px;
         width: 100%;
         max-width: 480px;
-      }
+      }}
 
-      .control-group {
+      .control-group {{
         display: flex;
         align-items: center;
         gap: 8px;
-      }
-      .control-group label {
+      }}
+      .control-group label {{
         font-size: 13px;
         font-weight: 600;
         color: #9ca3af;
-      }
-      .control-group select {
+      }}
+      .control-group select {{
         background: #111827;
         color: #f59e0b;
         border: 1px solid #374151;
@@ -109,20 +127,20 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         font-weight: bold;
         outline: none;
         cursor: pointer;
-      }
+      }}
 
       /* Circular Lounge Table */
-      .table-area {
+      .table-area {{
         position: relative;
         width: 320px;
         height: 320px;
         display: flex;
         justify-content: center;
         align-items: center;
-        margin-bottom: 20px;
-      }
+        margin-bottom: 15px;
+      }}
 
-      .table-outer-ring {
+      .table-outer-ring {{
         position: absolute;
         width: 300px;
         height: 300px;
@@ -130,31 +148,30 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         background: radial-gradient(circle, #1e293b 0%, #0f172a 70%, #020617 100%);
         border: 3px solid rgba(245, 158, 11, 0.3);
         box-shadow: 0 0 35px rgba(245, 158, 11, 0.15), inset 0 0 20px rgba(0,0,0,0.8);
-      }
+      }}
 
-      .table-inner-glow {
+      .table-inner-glow {{
         position: absolute;
-        width: 220px;
-        height: 220px;
+        width: 210px;
+        height: 210px;
         border-radius: 50%;
         border: 1.5px dashed rgba(245, 158, 11, 0.4);
         animation: pulseGlow 4s infinite alternate ease-in-out;
-      }
-      @keyframes pulseGlow {
-        0% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }
-        100% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.5); }
-      }
+      }}
+      @keyframes pulseGlow {{
+        0% {{ box-shadow: 0 0 10px rgba(245, 158, 11, 0.2); }}
+        100% {{ box-shadow: 0 0 25px rgba(245, 158, 11, 0.5); }}
+      }}
 
       /* Player Seats Around Table */
-      .player-seat {
+      .player-seat {{
         position: absolute;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
+        padding: 5px 10px;
+        border-radius: 16px;
         background: #1f2937;
         border: 2px solid #f59e0b;
         color: #f3f4f6;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: bold;
         display: flex;
         justify-content: center;
@@ -162,18 +179,22 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
         transition: all 0.3s ease;
         z-index: 5;
-      }
-      .player-seat.selected {
+        white-space: nowrap;
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }}
+      .player-seat.selected {{
         background: #ef4444;
         border-color: #fff;
         color: #fff;
-        transform: scale(1.35) !important;
+        transform: scale(1.3) !important;
         box-shadow: 0 0 25px #ef4444, 0 0 45px #ef4444;
         z-index: 10;
-      }
+      }}
 
       /* 3D Realistic Amber Beer Bottle */
-      .bottle-wrapper {
+      .bottle-wrapper {{
         position: relative;
         width: 70px;
         height: 240px;
@@ -184,19 +205,18 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         transition: transform 3.8s cubic-bezier(0.1, 0.85, 0.1, 1);
         filter: drop-shadow(0 15px 15px rgba(0, 0, 0, 0.85));
         z-index: 6;
-      }
+      }}
 
-      .beer-bottle {
+      .beer-bottle {{
         position: relative;
         width: 54px;
         height: 220px;
         display: flex;
         flex-direction: column;
         align-items: center;
-      }
+      }}
 
-      /* Gold Crown Cap (ฝาจีบขวดเบียร์) */
-      .beer-cap {
+      .beer-cap {{
         width: 18px;
         height: 12px;
         background: linear-gradient(90deg, #b45309, #fde047, #f59e0b, #78350f);
@@ -204,19 +224,17 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         box-shadow: 0 2px 4px rgba(0,0,0,0.6);
         z-index: 4;
         border-bottom: 2px solid #78350f;
-      }
+      }}
 
-      /* Neck Ring */
-      .beer-neck-ring {
+      .beer-neck-ring {{
         width: 20px;
         height: 6px;
         background: linear-gradient(90deg, #78350f, #d97706, #451a03);
         margin-top: -1px;
         z-index: 3;
-      }
+      }}
 
-      /* Long Neck (คอขวดเบียร์) */
-      .beer-neck {
+      .beer-neck {{
         width: 22px;
         height: 75px;
         background: linear-gradient(
@@ -229,10 +247,9 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         border-radius: 4px 4px 0 0;
         box-shadow: inset 2px 0 4px rgba(255, 255, 255, 0.4);
         position: relative;
-      }
+      }}
 
-      /* Neck Foil/Label (ฉลากคอขวด) */
-      .beer-neck-label {
+      .beer-neck-label {{
         position: absolute;
         top: 25px;
         width: 100%;
@@ -246,18 +263,16 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         font-size: 8px;
         color: #fde047;
         font-weight: bold;
-      }
+      }}
 
-      /* Shoulder Curve (ไหล่ขวด) */
-      .beer-shoulder {
+      .beer-shoulder {{
         width: 54px;
         height: 35px;
         background: radial-gradient(circle at 50% 0%, rgba(217, 119, 6, 0.9), rgba(120, 53, 15, 1) 80%);
         clip-path: polygon(29.6% 0%, 70.4% 0%, 100% 100%, 0% 100%);
-      }
+      }}
 
-      /* Main Body (ตัวขวดเบียร์อำพัน) */
-      .beer-body {
+      .beer-body {{
         position: relative;
         width: 54px;
         height: 100px;
@@ -274,10 +289,9 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         justify-content: center;
         align-items: center;
         overflow: hidden;
-      }
+      }}
 
-      /* Main Beer Label (ฉลากเบียร์หลัก) */
-      .beer-main-label {
+      .beer-main-label {{
         width: 44px;
         height: 52px;
         background: linear-gradient(180deg, #fef3c7 0%, #fde047 30%, #d97706 100%);
@@ -288,26 +302,12 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         justify-content: center;
         align-items: center;
         box-shadow: 0 2px 6px rgba(0,0,0,0.5);
-      }
-      .label-star {
-        font-size: 10px;
-        color: #b91c1c;
-      }
-      .label-text {
-        font-size: 9px;
-        font-weight: 900;
-        color: #451a03;
-        letter-spacing: 0.5px;
-        font-family: serif;
-      }
-      .label-sub {
-        font-size: 6px;
-        font-weight: bold;
-        color: #78350f;
-      }
+      }}
+      .label-star {{ font-size: 10px; color: #b91c1c; }}
+      .label-text {{ font-size: 9px; font-weight: 900; color: #451a03; letter-spacing: 0.5px; font-family: serif; }}
+      .label-sub {{ font-size: 6px; font-weight: bold; color: #78350f; }}
 
-      /* Glass Highlight Reflection */
-      .glass-shine {
+      .glass-shine {{
         position: absolute;
         top: 0;
         left: 6px;
@@ -317,48 +317,47 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         border-radius: 4px;
         filter: blur(0.8px);
         pointer-events: none;
-      }
+      }}
 
       /* Result Display Card */
-      .result-card {
+      .result-card {{
         background: rgba(17, 24, 39, 0.85);
         backdrop-filter: blur(12px);
         border: 1px solid rgba(245, 158, 11, 0.3);
         width: 100%;
         max-width: 460px;
-        padding: 16px 20px;
+        padding: 12px 18px;
         border-radius: 16px;
         text-align: center;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-        margin-bottom: 15px;
-        min-height: 90px;
+        margin-bottom: 12px;
+        min-height: 80px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-      }
-      .result-header {
+      }}
+      .result-header {{
         font-size: 13px;
         font-weight: 700;
         color: #f59e0b;
         letter-spacing: 1px;
         text-transform: uppercase;
         margin-bottom: 4px;
-      }
-      .result-body {
-        font-size: 17px;
+      }}
+      .result-body {{
+        font-size: 16px;
         font-weight: 700;
         color: #f9fafb;
         line-height: 1.4;
-      }
+      }}
 
-      /* Control Button */
-      .spin-btn {
+      .spin-btn {{
         background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
         color: #0f172a;
         border: none;
-        padding: 12px 36px;
-        font-size: 17px;
+        padding: 10px 32px;
+        font-size: 16px;
         font-weight: 800;
         border-radius: 12px;
         cursor: pointer;
@@ -367,21 +366,20 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         display: flex;
         align-items: center;
         gap: 8px;
-      }
-      .spin-btn:hover {
+      }}
+      .spin-btn:hover {{
         transform: translateY(-2px) scale(1.02);
         box-shadow: 0 6px 25px rgba(245, 158, 11, 0.6);
-      }
-      .spin-btn:disabled {
+      }}
+      .spin-btn:disabled {{
         background: #374151;
         color: #9ca3af;
         cursor: not-allowed;
         transform: none;
         box-shadow: none;
-      }
+      }}
 
-      /* Confetti Canvas overlay */
-      #canvas-confetti {
+      #canvas-confetti {{
         position: absolute;
         top: 0;
         left: 0;
@@ -389,7 +387,7 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         height: 100%;
         pointer-events: none;
         z-index: 20;
-      }
+      }}
     </style>
     </head>
     <body>
@@ -397,21 +395,6 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
 
       <!-- Settings Panel -->
       <div class="control-panel">
-        <div class="control-group">
-          <label for="playerCount">👥 จำนวนคนในวง:</label>
-          <select id="playerCount" onchange="updatePlayers()">
-            <option value="2">2 คน</option>
-            <option value="3">3 คน</option>
-            <option value="4">4 คน</option>
-            <option value="5">5 คน</option>
-            <option value="6" selected>6 คน</option>
-            <option value="7">7 คน</option>
-            <option value="8">8 คน</option>
-            <option value="9">9 คน</option>
-            <option value="10">10 คน</option>
-            <option value="12">12 คน</option>
-          </select>
-        </div>
         <div class="control-group">
           <label for="gameMode">🎯 โหมดเกม:</label>
           <select id="gameMode">
@@ -461,52 +444,61 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
     <script>
       let currentAngle = 0;
       let isSpinning = false;
+      const playerNames = {names_js_array};
 
-      const tasks = {
+      const tasks = {{
         drinking: [
           "🍻 ดื่ม 1 แก้วเต็มๆ แบบไม่ต้องสืบ!",
-          "👉 ซ้ายมือดื่ม!",
+          "👉 เลือกเพื่อนซ้ายมือของคุณ 1 คนให้ดื่มแทน!",
           "👑 ได้เป็นราชา 1 รอบ! สั่งใครดื่มก็ได้ตามใจชอบ 1 คน",
-          "🎤 ขวามือดื่ม!",
+          "🤫 ห้ามพูดคำว่า 'กู/มึง' เป็นเวลา 2 รอบ ใครหลุดดื่ม!",
+          "🎤 ร้องเพลงท่อนฮุกที่ชอบเสียงดังๆ 1 ท่อน ไม่งั้นหมดแก้ว",
           "📸 ถ่ายรูปเซลฟี่หน้าตลกๆ ลงสตอรี่ไอจีตอนนี้!",
-          "🤝 ชนแก้วกับคนที่นั่งตรงข้ามคุณและดื่ม",
-          "🔄 หน้าขาววว",
-          "🔄 เลือกเพื่อน 1 คนเป็นตัวแทนในรอบนี้(1รอบ)",
-          "👉 หาเพื่อนดื่มด้วย2คน!",
-          "👉 ดื่มแล้วย้อนศร(เปลี่ยนทางวน)",
-          "👉 หาเพื่อนดื่มด้วย1คน!",
-          "หมดวง🥳🥳(โดนทุกคน)",
-          "15ยก (นับสูงสุด3)🥳",
-          "เหมา2แก้ว ",
-          "1-5โดน🥳(เลือกเลขในใจแล้วชูนิ้วขึ้นพร้อมกัน)",
-          "🤫 ห้ามพูดเป็นเวลา 2 รอบ ใครหลุดดื่ม!",
-          "👉 หาเพื่อนดื่มด้วย1คน!",
-          "🤫 ห้ามพูดคำว่า 'กู/มึง' เป็นเวลา 2 รอบ ใครหลุดดื่ม!"
-        ],   
-      };
+          "🤝 ชนแก้วและดื่มพร้อมกับคนที่นั่งตรงข้ามคุณ",
+          "🔄 เปลี่ยนที่นั่งกับคนขวามือ 1 รอบ"
+        ],
+        truth_dare: [
+          "🔥 [Truth] บอกความลับเรื่องที่อายที่สุดในชีวิตมา 1 เรื่อง!",
+          "🔥 [Truth] ใครในวงนี้ที่คุณเคยแอบชอบหรือรู้สึกดีด้วยมากที่สุด?",
+          "🔥 [Truth] เคยโกหกเพื่อนในวงนี้เรื่องอะไรบ้าง สารภาพมาซะดีๆ",
+          "💥 [Dare] โทรหาเบอร์ล่าสุดในสายโทรเข้า แล้วพูดว่า 'คิดถึงจัง' แล้ววางสาย!",
+          "💥 [Dare] ทำท่าเต้นยั่วๆ 10 วินาทีกลางวง!",
+          "💥 [Dare] ยอมให้คนที่อยู่ขวามือวาดหน้าคุณด้วยปากกา 1 จุด",
+          "🔥 [Truth] เรื่องไหนที่คุณไม่เคยบอกใครในวงนี้มาก่อนเลย?"
+        ],
+        most_likely: [
+          "🤫 ใครมีโอกาสเมาแล้วนอนหลับหน้าเซเว่นมากที่สุด? (ชี้พร้อมกัน!)",
+          "🤫 ใครคือคนที่สายเปย์ใจดีที่สุดในกลุ่มนี้?",
+          "🤫 ใครมีโอกาสตอบแชทช้าที่สุดในวง?",
+          "🤫 ใครคือสายตึงคอทองแดงที่สุดประจำกลุ่ม?",
+          "🤫 ใครมีโอกาสอกหักแล้วร้องไห้งอแงหนักที่สุด?",
+          "🤫 ใครคือคนที่โกหกได้เนียนที่สุดในวง?"
+        ]
+      }};
 
-      function updatePlayers() {
-        const count = parseInt(document.getElementById('playerCount').value);
+      function updatePlayers() {{
         const container = document.getElementById('seatsContainer');
         container.innerHTML = '';
-        const radius = 135;
+        const count = playerNames.length;
+        const radius = 125;
 
-        for (let i = 0; i < count; i++) {
-          const angleDeg = (i * (360 / count)) - 90; // 0 deg points to top seat
+        for (let i = 0; i < count; i++) {{
+          const angleDeg = (i * (360 / count)) - 90;
           const angleRad = angleDeg * (Math.PI / 180);
           const x = Math.cos(angleRad) * radius;
           const y = Math.sin(angleRad) * radius;
 
           const seat = document.createElement('div');
           seat.className = 'player-seat';
-          seat.id = `seat-${i}`;
-          seat.innerText = `P${i + 1}`;
-          seat.style.transform = `translate(${x}px, ${y}px)`;
+          seat.id = 'seat-' + i;
+          seat.innerText = playerNames[i];
+          seat.title = playerNames[i];
+          seat.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
           container.appendChild(seat);
-        }
-      }
+        }}
+      }}
 
-      function spinBottle() {
+      function spinBottle() {{
         if (isSpinning) return;
         isSpinning = true;
 
@@ -517,7 +509,7 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
 
         document.querySelectorAll('.player-seat').forEach(s => s.classList.remove('selected'));
 
-        const count = parseInt(document.getElementById('playerCount').value);
+        const count = playerNames.length;
         const selectedIndex = Math.floor(Math.random() * count);
         
         const targetSeatAngle = selectedIndex * (360 / count);
@@ -526,43 +518,43 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
         currentAngle += extraTurns + targetSeatAngle - (currentAngle % 360);
         
         const wrapper = document.getElementById('bottleWrapper');
-        wrapper.style.transform = `rotate(${currentAngle}deg)`;
+        wrapper.style.transform = 'rotate(' + currentAngle + 'deg)';
 
-        setTimeout(() => {
+        setTimeout(() => {{
           isSpinning = false;
           spinBtn.disabled = false;
 
-          const winnerSeat = document.getElementById(`seat-${selectedIndex}`);
+          const winnerSeat = document.getElementById('seat-' + selectedIndex);
           if (winnerSeat) winnerSeat.classList.add('selected');
 
           const mode = document.getElementById('gameMode').value;
           const missionList = tasks[mode];
           const chosenMission = missionList[Math.floor(Math.random() * missionList.length)];
 
-          document.getElementById('resultHeader').innerText = `🎯 ผู้โชคร้าย: ผู้เล่น P${selectedIndex + 1}`;
+          document.getElementById('resultHeader').innerText = '🎯 ผู้โชคร้าย: ' + playerNames[selectedIndex];
           document.getElementById('resultBody').innerText = chosenMission;
 
           launchConfetti();
 
-        }, 3800);
-      }
+        }}, 3800);
+      }}
 
       const confettiCanvas = document.getElementById('canvas-confetti');
       const ctx = confettiCanvas.getContext('2d');
       let particles = [];
 
-      function resizeConfetti() {
+      function resizeConfetti() {{
         confettiCanvas.width = confettiCanvas.parentElement.clientWidth;
         confettiCanvas.height = confettiCanvas.parentElement.clientHeight;
-      }
+      }}
       window.addEventListener('resize', resizeConfetti);
       resizeConfetti();
 
-      function launchConfetti() {
+      function launchConfetti() {{
         particles = [];
         const colors = ['#f59e0b', '#38bdf8', '#fbbf24', '#ef4444', '#a855f7'];
-        for (let i = 0; i < 40; i++) {
-          particles.push({
+        for (let i = 0; i < 40; i++) {{
+          particles.push({{
             x: confettiCanvas.width / 2,
             y: confettiCanvas.height / 2,
             vx: (Math.random() - 0.5) * 10,
@@ -570,17 +562,17 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
             size: Math.random() * 6 + 4,
             color: colors[Math.floor(Math.random() * colors.length)],
             life: 1
-          });
-        }
+          }});
+        }}
         animateConfetti();
-      }
+      }}
 
-      function animateConfetti() {
+      function animateConfetti() {{
         ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
         let active = false;
 
-        particles.forEach(p => {
-          if (p.life > 0) {
+        particles.forEach(p => {{
+          if (p.life > 0) {{
             active = true;
             p.x += p.vx;
             p.y += p.vy;
@@ -592,18 +584,18 @@ if game_mode == "🍾 เกมหมุนขวดเบียร์ดิจ�
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
             ctx.fill();
-          }
-        });
+          }}
+        }});
 
         if (active) requestAnimationFrame(animateConfetti);
-      }
+      }}
 
       updatePlayers();
     </script>
     </body>
     </html>
     """
-    components.html(spin_bottle_html, height=630)
+    components.html(spin_bottle_html, height=650)
 
 # ==========================================
 # 2. MULTI-DICE 3D ROLLER
